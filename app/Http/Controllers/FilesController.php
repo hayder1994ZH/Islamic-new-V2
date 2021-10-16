@@ -81,7 +81,7 @@ class FilesController extends Controller
         $response = Temp_files::get();
         return Utilities::wrap($response, 200);
     }
-    
+    //advanceSearch
     public function getLists(Request $request) 
     {
         $request->validate([
@@ -97,6 +97,32 @@ class FilesController extends Controller
         $skip = $request->skip;
         $domain = $request->get('host');
         $response = $this->FilesRepository->getListFiles($skip, $take, $domain, $type['type']);
+        return Utilities::wrap($response, 200);
+    }
+    //advanceSearch
+    public function advanceSearch(Request $request) 
+    {
+        $data = $request->validate([
+            'skip' => 'Integer',
+            'search' => 'nullable|string',
+            'vocalist_id' => 'nullable|Integer|exists:vocalists,id',
+            'category_id' => 'nullable|Integer|exists:categories,id',
+            'collection_id' => 'nullable|Integer|exists:collections,id',
+            'take' => 'required|Integer',
+        ]);
+         
+        $type = $request->validate([
+            'type' => 'required|Integer'
+        ]);
+        
+        $vocalist_id = $request->vocalist_id;
+        $category_id = $request->category_id;
+        $collection_id = $request->collection_id;
+        $search = $request->search;
+        $take = $request->take;
+        $skip = $request->skip;
+        $domain = $request->get('host');
+        $response = $this->FilesRepository->advanceSearch($skip, $take, $domain, $type['type'], $search, $vocalist_id, $collection_id, $category_id);
         return Utilities::wrap($response, 200);
     }
     
@@ -550,7 +576,7 @@ class FilesController extends Controller
         return response()->json($response);
     }
 
-    //download files 
+    //download files  advanceSearch
     public function download(Request $request, $id) // Anyone
     {
         $type = $request->validate([

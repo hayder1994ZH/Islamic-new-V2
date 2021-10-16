@@ -1722,11 +1722,11 @@ public function getFilebyId($id, $domain, $domain2, $type)
     // public function ()
     
     //Repo for get random files by category id
-    public function advanceSearch($domain, $take, $skip, $type, $search, $vocalist_id, $collection_id, $category_id)
+    public function advanceSearch($skip, $take, $domain, $type, $search, $vocalist_id, $collection_id, $category_id)
     {
         $dataFile = [];
         $objectModel = File_objects::where('is_deleted', 0);
-        $response = Files::where('vocalist_id', $vocalist_id)->with('ratings', 'collection', 'vocalist', 'categories', 'user', 'object', 'objectFiles',  'downloads', 'likes', 'comments.users', 'comments.replies.users', 'number_files', 'tags')
+        $response = Files::with('ratings', 'collection', 'vocalist', 'categories', 'user', 'object', 'objectFiles',  'downloads', 'likes', 'comments.users', 'comments.replies.users', 'number_files', 'tags')
         ->where('is_deleted', 0)
         ->where('aproved', 0)
         ->whereHas('object',function ($objectModel) use($type) {
@@ -1734,7 +1734,7 @@ public function getFilebyId($id, $domain, $domain2, $type)
         })
         ->withCount('likes');
         if(!is_null($search))
-            $response->where('title', $search);
+            $response->where('title', 'like', '%'.$search.'%');
             
         if(!is_null($vocalist_id))
         $response->where('vocalist_id', $vocalist_id);
