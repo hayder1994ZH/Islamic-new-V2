@@ -7,8 +7,10 @@ use App\Models\Likes;
 use App\Models\Rating;
 use App\Models\Comments;
 use App\Models\Downloads;
+use App\Helpers\Utilities;
 use App\Models\File_objects;
 use App\Models\Subcategories;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 
 class Files extends Model
@@ -17,13 +19,109 @@ class Files extends Model
 
 	protected $hidden = [
         'user_id',
+        'ImageFileObj',
+        'categories',
+        'vocalist',
+        'collection',
         'aproved',
+        'is_deleted'
 	];
     protected $casts = [
         'created_at' => 'datetime:Y-m-d H:i',
         'updated_at' => 'datetime:Y-m-d H:i',
     ];
-    
+    protected $appends = ['faviorate', 'liked', 'imageFile', 'vocalistName','vocalistImage', 'collectionName','collectionImage', 'categoryName','categoryImage'
+];
+
+    // get if user faviorate file
+    public function getFaviorateAttribute(){
+        if (Auth::guard('api')->check()) {
+            $favorite = Favorite::where('file_id', $this->id)
+            ->where('user_id', auth()->user()->id)
+            ->first();
+            if(!$favorite){
+                return false;
+            }else{
+                return true;
+            }
+        }else{
+            return false;
+        }
+    }
+
+    // get if user liked file
+    public function getLikedAttribute(){
+        if (Auth::guard('api')->check()) {
+            $like = Likes::where('file_id', $this->id)
+            ->where('user_id', auth()->user()->id)
+            ->first();
+            if(!$like){
+                return false;
+            }else{
+                return true;
+            }
+        }else{
+            return false;
+        }
+    }
+    // image file
+    public function getImageFileAttribute(){
+        foreach($this->ImageFileObj as $fielobj){
+            if($fielobj->buket == 'islamic_images'){
+                return $fielobj->imageFile;
+            }else{
+                return null;
+            }
+        }
+    }
+    // Vocalist file
+    public function getVocalistNameAttribute(){
+        if($this->vocalist != null){
+            return $this->vocalist->name;
+        }else{
+            return null;
+        }
+    }
+    // Vocalist file
+    public function getVocalistImageAttribute(){
+        if($this->vocalist != null){
+            return $this->vocalist->imageVocalist;
+        }else{
+            return null;
+        }
+    }
+    // Collection file
+    public function getCollectionNameAttribute(){
+        if($this->vocalist != null){
+            return $this->vocalist->name;
+        }else{
+            return null;
+        }
+    }
+    // Collection file
+    public function getCollectionImageAttribute(){
+        if($this->collection != null){
+            return $this->collection->imageCollection;
+        }else{
+            return null;
+        }
+    }
+    // Category file
+    public function getCategoryNameAttribute(){
+        if($this->categories != null){
+            return $this->categories->name;
+        }else{
+            return null;
+        }
+    }
+    // Category file
+    public function getCategoryImageAttribute(){
+        if($this->categories != null){
+            return $this->categories->imageCategory;
+        }else{
+            return null;
+        }
+    }
     //Relations
 	public function user()
 	{
@@ -42,12 +140,17 @@ class Files extends Model
 	 	 
     public function objectFiles()
     {
-        return $this->hasMany(File_objects::class, 'file_id')->where('is_deleted', 0);
+        return $this->hasMany(File_objects::class, 'file_id')->where('type_audio', '!=', 0)->where('is_deleted', 0);
+    }	
+
+    public function ImageFileObj()
+    {
+        return $this->hasMany(File_objects::class, 'file_id')->where('type_audio', 0)->where('is_deleted', 0);
     }
 	  	 
     public function object()
     {
-        return $this->hasMany(File_objects::class, 'file_id')->where('is_deleted', 0);
+        return $this->hasMany(File_objects::class, 'file_id')->where('type_audio', '!=', 0)->where('is_deleted', 0);
     }
 	 
     public function number_files()

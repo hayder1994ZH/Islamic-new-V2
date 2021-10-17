@@ -16,6 +16,7 @@ class Controller extends BaseController
     public $vedioBuket = ':7777/islamic_videos/';
     public $audioBuket = ':7777/islamic_audio/';
     public $socialBuket = ':7777/islamic_social/';
+    public static $MODEL_NOT_FOUND = '/images/';
     //    public $imageSize = '';
     // // public $imageSize = '?h=256';
     // public $imageBuket = '/storage/';

@@ -23,7 +23,6 @@ Route::post('auth/register', 'UserController@register');
 Route::post('auth/register/api', 'UserController@registerAPI');
 Route::post('auth/recovery/api', 'UserController@recoveryAPI');
 Route::get('file/filter/{id}', 'FilesController@filter');
-Route::get('file/filter/{id}', 'FilesController@filter');
 Route::get('file/getFromTemp', 'FilesController@getFromTemp');
 Route::get('file/rates/{id}', 'FilesController@rates');
 Route::get('download/{id}', 'FilesController@download');
@@ -67,7 +66,7 @@ Route::get('files', 'FilesController@index');
 Route::get('version/clint/{version}', 'VersionController@showByVersion');//getAllSocialView
 Route::get('get/file/category/{category_id}/{vocalist_id}', 'FilesController@getRandomFileByCategoryId');
 
-Route::group(['middleware' => ['auth']], function () {
+Route::group(['middleware' => ['auth']], function (){
     Route::post('file/playlist', 'FilesController@playlist');
     Route::delete('file/playlist/delete/{id}', 'FilesController@deleteFromPlaylist');
     Route::get('file/playlist/get', 'FilesController@getMyPlaylist');
@@ -116,11 +115,8 @@ Route::group(['middleware' => ['auth']], function () {
     Route::apiResource('role', 'RolesController')->middleware('role:Admin');
     Route::get('order/status/{id}', 'OrderController@updateStatus');
     Route::apiResource('slider', 'SliderController')->middleware('role:Admin');
-
     Route::get('count/download', 'DownloadController@count'); // Login (Company)
 });
-
-
 
 Route::get('auth/google', 'GoogleController@redirectToGoogle');
 Route::get('auth/google/callback', 'GoogleController@handleGoogleCallback');

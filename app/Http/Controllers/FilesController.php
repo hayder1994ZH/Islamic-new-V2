@@ -61,26 +61,23 @@ class FilesController extends Controller
             'tags' => 'nullable',
             'search' => 'nullable'
         ]);
-          
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        
         $tags = $request->tags;
         $search = $request->search;
         $category_id = $request->category_id;
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getAllData($skip, $take, $tags, $domain,$category_id, $search, $type['type']);
+        $response = $this->FilesRepository->getAllData($skip, $take, $tags,$category_id, $search, $type['type']);
         return Utilities::wrap($response, 200);
     }
     public function getFromTemp(Request $request) // Anyone
     {
-        
         $response = Temp_files::get();
         return Utilities::wrap($response, 200);
     }
+
     //advanceSearch
     public function getLists(Request $request) 
     {
@@ -88,15 +85,12 @@ class FilesController extends Controller
             'skip' => 'Integer',
             'take' => 'required|Integer',
         ]);
-         
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getListFiles($skip, $take, $domain, $type['type']);
+        $response = $this->FilesRepository->getListFiles($skip, $take, $type['type']);
         return Utilities::wrap($response, 200);
     }
     //advanceSearch
@@ -121,8 +115,7 @@ class FilesController extends Controller
         $search = $request->search;
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->advanceSearch($skip, $take, $domain, $type['type'], $search, $vocalist_id, $collection_id, $category_id);
+        $response = $this->FilesRepository->advanceSearch($skip, $take, $type['type'], $search, $vocalist_id, $collection_id, $category_id);
         return Utilities::wrap($response, 200);
     }
     
@@ -139,8 +132,7 @@ class FilesController extends Controller
         
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getListFilesSortView($skip, $take, $domain, $type['type']);
+        $response = $this->FilesRepository->getListFilesSortView($skip, $take, $type['type']);
         return Utilities::wrap($response, 200);
     }
     
@@ -157,8 +149,7 @@ class FilesController extends Controller
         
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getListFilesSortDownload($skip, $take, $domain, $type['type']);
+        $response = $this->FilesRepository->getListFilesSortDownload($skip, $take, $type['type']);
         return Utilities::wrap($response, 200);
     }
     
@@ -175,8 +166,7 @@ class FilesController extends Controller
         
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getListFilesSortRating($skip, $take, $domain, $type['type']);
+        $response = $this->FilesRepository->getListFilesSortRating($skip, $take, $type['type']);
         return Utilities::wrap($response, 200);
     }
 
@@ -186,11 +176,9 @@ class FilesController extends Controller
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        $domain = $request->get('host');
-        $domain2 = $request->get('hostScheme');
-        $response = $this->FilesRepository->getFile($id, $domain, $domain2, $type['type']);
+        $response = $this->FilesRepository->getFile($id, $type['type']);
         $getFile = Files::where('id', $id)->where('aproved', 0)->firstOrFail();
-        $views = $this->FilesRepository->update($id, ['views' => $getFile->views+=1]);
+        $this->FilesRepository->update($id, ['views' => $getFile->views+=1]);
         return  $response;
         
 
@@ -207,12 +195,13 @@ class FilesController extends Controller
             'type' => 'required|Integer'
         ]);
         $take = $request->take;
-        $skip = $request->skip;$domain = $request->get('host');
+        $skip = $request->skip;
+        $domain = $request->get('host');
         $response = $this->FilesRepository->getPlaylist($domain, $take, $skip, $type['type']);
         return  $response;
     }
     
-    public function dashboardAdmin(Request $request) // Admin  getRandomFilesByCategoryId
+    public function dashboardAdmin(Request $request) // Admin  
     {
         $response = $this->FilesRepository->dashboard();
         return  $response;
@@ -228,7 +217,7 @@ class FilesController extends Controller
         $take = $request->take;
         $skip = $request->skip;
         $domain = $request->get('host');
-        $response = $this->FilesRepository->getListByVocalistId($id, $domain, $take, $skip);
+        $response = $this->FilesRepository->getListByVocalistId($id, $take, $skip);
         return  $response;
     }
 
@@ -244,8 +233,7 @@ class FilesController extends Controller
         
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getByVocalistId($id, $domain, $take, $skip, $type['type']);
+        $response = $this->FilesRepository->getByVocalistId($id, $take, $skip, $type['type']);
         return  $response;
     }
 
@@ -270,8 +258,7 @@ class FilesController extends Controller
         
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getByVocalistIdAndCategoryId($id, $domain, $take, $skip, $type['type'], $category_id);
+        $response = $this->FilesRepository->getByVocalistIdAndCategoryId($id, $take, $skip, $type['type'], $category_id);
         return  $response;
     }
 
@@ -281,9 +268,7 @@ class FilesController extends Controller
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getRandomFilesByCategoryId($domain, $type['type'], $category_id, $id);
+        $response = $this->FilesRepository->getRandomFilesByCategoryId($type['type'], $category_id, $id);
         return  $response;
     }
 
@@ -294,15 +279,13 @@ class FilesController extends Controller
             'skip' => 'Integer',
             'take' => 'required|Integer',
         ]);
-        
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
 
         $take = $request->take;
         $skip = $request->skip;
-        $domain = $request->get('host');
-        $response = $this->FilesRepository->getByCollectionId($id, $domain, $take, $skip, $type['type']);
+        $response = $this->FilesRepository->getByCollectionId($id, $take, $skip, $type['type']);
         return  $response;
     }
     
@@ -312,16 +295,12 @@ class FilesController extends Controller
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-
-        $domain = $request->get('host');
-        $domain2 = $request->get('hostScheme');
-        $response = $this->FilesRepository->getFilebyId($id, $domain, $domain2, $type['type']);
+        $response = $this->FilesRepository->getFilebyId($id, $type['type']);
         $getFile = Files::where('id', $id)->firstOrFail();
         if($getFile->user_id != auth()->user()->id){
             return Utilities::wrap(['error' => 'permisson denid'], 403);
         }
-        $views = $this->FilesRepository->update($id, ['views' => $getFile->views+=1]);
-        
+        $this->FilesRepository->update($id, ['views' => $getFile->views+=1]);
         return $response;
     }
 
@@ -572,7 +551,7 @@ class FilesController extends Controller
         $skip = $request->skip;
         $take = $request->take;
         $domain = $request->get('host');
-        $response = $this->FilesRepository->filter($id, $skip, $take, $tags, $domain, $type['type']);
+        $response = $this->FilesRepository->filter($id, $skip, $take, $tags, $type['type']);
         return response()->json($response);
     }
 

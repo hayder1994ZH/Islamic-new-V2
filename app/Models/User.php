@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\Utilities;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -15,8 +16,13 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'is_deleted',
         'password',
+        'image',
     ];
 
+    protected $appends = ['imageUser'];
+    public function getImageUserAttribute(){
+        return ($this->image != null)? request()->get('host') . Utilities::$imageBuket . $this->image:null;
+    }
 
     /**
      * Get the identifier that will be stored in the subject claim of the JWT.
