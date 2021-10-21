@@ -39,24 +39,9 @@ class CollectionController extends Controller
         return Utilities::wrap($response, 200);
     }
 
-    public function show(Request $request, $id)
+    public function show($id)
     {
-        $domain = $request->get('host');
-        $Collection = Collection::where('id', $id)->with('user')->get()->map(function ($item) use ($domain) {
-            $data['id'] =$item->id;
-            $data['name'] =$item->name  ;
-            $data['created_at'] =$item->created_at;
-            $data['updated_at'] =$item->updated_at;
-            if(!empty($item->user)){
-                $data['user'] =[
-                    'id' =>  $item->user->id,
-                    'full_name' =>  $item->user->full_name,
-                    'image' =>  ($item->user->image != null)? $domain . $this->imageBuket . $item->user->image . $this->imageSize:null,
-                ];
-            }  
-            return $data;
-        } );
-        return $Collection[0];
+        return Collection::where('id', $id)->with('user')->firstOrFail();
     }
 
     public function store(Request $request)
