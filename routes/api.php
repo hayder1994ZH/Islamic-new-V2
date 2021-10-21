@@ -65,7 +65,8 @@ Route::get('social/view', 'SocialController@getAllSocialViews');
 Route::get('files', 'FilesController@index');
 Route::get('version/clint/{version}', 'VersionController@showByVersion');//getAllSocialView
 Route::get('get/file/category/{category_id}/{vocalist_id}', 'FilesController@getRandomFileByCategoryId');
-
+Route::get('file/view/collection/add', 'FilesController@addViewsCollection');
+//
 Route::group(['middleware' => ['auth']], function (){
     Route::post('file/playlist', 'FilesController@playlist');
     Route::delete('file/playlist/delete/{id}', 'FilesController@deleteFromPlaylist');

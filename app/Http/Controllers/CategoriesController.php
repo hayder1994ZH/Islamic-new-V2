@@ -72,21 +72,10 @@ class CategoriesController extends Controller
     }
 
     //Get Single Categories
-    public function show(Request $request, $id)
+    public function show($id)
     {
 
-        $domain = $request->get('host');
-        $response = Categories::where('id', $id)->get()->map(function ($item) use ($domain) {
-            $data['id'] = $item->id;
-            $data['name'] = $item->name;
-            $data['icon'] = $item->icon;
-            $data['icon_mobile'] = ($item->icon_mobile != null)? $domain .$this->imageBuket . $item->icon_mobile:null;
-            $data['created_at'] = $item->created_at;
-            $data['updated_at'] = $item->updated_at;
-            return $data;
-        });
-        
-        return $response;
+       return Categories::where('id', $id)->firstOrFail();
     }
      
     //Add Categories

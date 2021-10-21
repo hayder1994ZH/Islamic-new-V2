@@ -3,33 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tags;
-use App\Models\User;
 use App\Models\Files;
-use Illuminate\Support\Str;
-use App\Models\Temp_files;
+use App\Models\PlayList;
 use App\Models\Downloads;
 use App\Helpers\Utilities;
-use App\Models\Categories;
+use App\Models\Collection;
 use App\Models\Tags_files;
-use App\Models\File_objects;
-use App\Models\PlayList;
-use App\Models\History;
-use Illuminate\Http\Request;
+use App\Models\Temp_files;
 use App\Models\TempRemove;
-use App\Repository\PlayListRepository;
+use Illuminate\Support\Str;
+use App\Models\File_objects;
+use Illuminate\Http\Request;
 use App\Repository\TagsRepository;
+use App\Repository\TempRepository;
 use App\Repository\FilesRepository;
 use App\Repository\ObjectRepository;
-use App\Repository\TempRepository;
-use App\Repository\TempRemoveRepository;
-use App\Repository\DownloadsRepository;
-use Carbon\Carbon;
-use Facade\FlareClient\Stacktrace\File;
-use GuzzleHttp\Client;
-use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Response;
+use App\Repository\PlayListRepository;
+use App\Repository\DownloadsRepository;
+use App\Repository\CollectionRepository;
+use App\Repository\TempRemoveRepository;
 
 class FilesController extends Controller
 {
@@ -39,9 +32,9 @@ class FilesController extends Controller
     private $DownloadsRepository;
     private $TagsRepository;
     private $TempRepository;
-    private $id;
     public function __construct()
     {
+        $this->CollectionRepository = new CollectionRepository(new Collection());
         $this->TempRemoveRepository = new TempRemoveRepository(new TempRemove());
         $this->PlayListRepository = new PlayListRepository(new PlayList());
         $this->DownloadsRepository = new DownloadsRepository(new Downloads());
@@ -96,7 +89,7 @@ class FilesController extends Controller
     //advanceSearch
     public function advanceSearch(Request $request) 
     {
-        $data = $request->validate([
+        $request->validate([
             'skip' => 'Integer',
             'search' => 'nullable|string',
             'vocalist_id' => 'nullable|Integer|exists:vocalists,id',
@@ -104,11 +97,9 @@ class FilesController extends Controller
             'collection_id' => 'nullable|Integer|exists:collections,id',
             'take' => 'required|Integer',
         ]);
-         
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        
         $vocalist_id = $request->vocalist_id;
         $category_id = $request->category_id;
         $collection_id = $request->collection_id;
@@ -129,7 +120,6 @@ class FilesController extends Controller
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        
         $take = $request->take;
         $skip = $request->skip;
         $response = $this->FilesRepository->getListFilesSortView($skip, $take, $type['type']);
@@ -163,7 +153,6 @@ class FilesController extends Controller
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        
         $take = $request->take;
         $skip = $request->skip;
         $response = $this->FilesRepository->getListFilesSortRating($skip, $take, $type['type']);
@@ -172,7 +161,6 @@ class FilesController extends Controller
 
     public function show(Request $request, $id) // Anyone
     {
-        
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
@@ -190,7 +178,6 @@ class FilesController extends Controller
             'skip' => 'Integer',
             'take' => 'required|Integer',
         ]);
-      
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
@@ -243,7 +230,6 @@ class FilesController extends Controller
         $response = $this->FilesRepository->getByCategoryId($id, $domain);
         return  $response;
     }
-
     //
     public function getByVocaIdIdAndCategoryId(Request $request, $id, $category_id)
     {
@@ -251,17 +237,14 @@ class FilesController extends Controller
             'skip' => 'Integer',
             'take' => 'required|Integer',
         ]);
-        
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        
         $take = $request->take;
         $skip = $request->skip;
         $response = $this->FilesRepository->getByVocalistIdAndCategoryId($id, $take, $skip, $type['type'], $category_id);
         return  $response;
     }
-
     //
     public function getRandomFileByCategoryId(Request $request, $category_id, $id)
     {
@@ -271,27 +254,23 @@ class FilesController extends Controller
         $response = $this->FilesRepository->getRandomFilesByCategoryId($type['type'], $category_id, $id);
         return  $response;
     }
-
     //
     public function getByCollectionId(Request $request, $id)
     {
         $request->validate([
-            'skip' => 'Integer',
-            'take' => 'required|Integer',
+            'skip' => 'integer',
+            'take' => 'required|integer',
         ]);
         $type = $request->validate([
-            'type' => 'required|Integer'
+            'type' => 'required|integer'
         ]);
-
         $take = $request->take;
         $skip = $request->skip;
         $response = $this->FilesRepository->getByCollectionId($id, $take, $skip, $type['type']);
         return  $response;
     }
-    
     public function getFileById(Request $request, $id) // Anyone
     {
-        
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
@@ -305,7 +284,7 @@ class FilesController extends Controller
     }
 
     //create file
-    public function store(Request $request) // Opration & Admin & Company
+    public function store(Request $request)// Opration & Admin & Company
     {
         //Validation
         $request->all();
@@ -324,7 +303,6 @@ class FilesController extends Controller
         $tags = $request->validate([
             "tags"    => "nullable|array",
         ]);
-
         //Processing
         $random = Str::random(32);
         $fullPath = $random; //new file path
@@ -356,7 +334,6 @@ class FilesController extends Controller
             $this->ObjectRepository->create($image2);
             $this->TempRepository->create(['key' => $image2['key'], 'buket' => $image2['buket'], 'table' => 'file_objects']);
         }
-
         if (!empty($tags['tags'][0])) {
             foreach ($tags['tags'] as $data) {
                 $tag['name'] = $data;
@@ -380,7 +357,6 @@ class FilesController extends Controller
         $file = Files::where('id', $id)->with('object')->first();
         return $file;
     }
-
     //Update Files
     public function update(Request $request, $id) // Admin
     {
@@ -410,27 +386,25 @@ class FilesController extends Controller
             $image['file_id'] = $id;
             $this->ObjectRepository->create($image);
             $this->TempRepository->create(['key' => $image['key'], 'buket' => $image['buket'], 'table' => 'file_objects']);
-
         }
-        
         if ($request->hasFile('imageAndroid')) { //upload image
             $ImageAndroid =  File_objects::where('file_id', $id)->where('type', 4)->first();
-              if($ImageAndroid){
+            if($ImageAndroid){
                 $this->TempRemoveRepository->create(['key' => $ImageAndroid->key, 'buket' => $ImageAndroid->buket, 'table' => 'file_objects']);
                 $ImageAndroid->delete();
-              }  
-              $image_iconAndroid = $request->file('imageAndroid');
-              $imageAndroid = Str::random(32) ."__imageAndroid.jpg";
-              $destinationPathAndroid = storage_path('app/public');
-              $image_iconAndroid->move($destinationPathAndroid, $imageAndroid);
-              $image2['key'] = $imageAndroid;
-              $image2['buket'] = 'islamic_images';
-              $image2['type'] = 4;
-              $image2['size'] = $request->file('imageAndroid')->getSize();
-              $image2['file_id'] = $id;
-              $this->ObjectRepository->create($image2);
-              $this->TempRepository->create(['key' => $image2['key'], 'buket' => $image2['buket'], 'table' => 'file_objects' ]);
-          }
+            }  
+            $image_iconAndroid = $request->file('imageAndroid');
+            $imageAndroid = Str::random(32) ."__imageAndroid.jpg";
+            $destinationPathAndroid = storage_path('app/public');
+            $image_iconAndroid->move($destinationPathAndroid, $imageAndroid);
+            $image2['key'] = $imageAndroid;
+            $image2['buket'] = 'islamic_images';
+            $image2['type'] = 4;
+            $image2['size'] = $request->file('imageAndroid')->getSize();
+            $image2['file_id'] = $id;
+            $this->ObjectRepository->create($image2);
+            $this->TempRepository->create(['key' => $image2['key'], 'buket' => $image2['buket'], 'table' => 'file_objects' ]);
+        }
         $response = $this->FilesRepository->update($id, $data);
         return Utilities::wrap(['message' => $response['message']], $response['code']);
     }
@@ -441,7 +415,6 @@ class FilesController extends Controller
         ini_set('post_max_size', '10000M');
         ini_set('max_input_time', 300000);
         ini_set('max_execution_time', 300000);
-        
         $file_path = $request->validate([
             'key' => 'file'
         ]);
@@ -456,69 +429,67 @@ class FilesController extends Controller
             return Utilities::wrap(['message' => 'Update name file successfully'], 200);
         }
         $addFiles = $this->FilesRepository->getById($id);
-         if($addFiles->user_id !=  auth()->user()->id){
-            return Utilities::wrap(['message' => 'permisson denid'], 400);
-         }
-            $target_dir = '/var/www/islamicBack/storage/app/public/';
-            $rand = rand();
-            $_FILES["key"]["tmp_name"];
-            $name = $_FILES["key"]["name"];
-            $ext = pathinfo($name, PATHINFO_EXTENSION);
-            
-            $fullPath = Str::random(32)."." . $ext ;
-            if(preg_match('/\p{Arabic}/u', $name)){
-                $name =  $fullPath;
-            }else{
-                $name = str_replace('.'. $ext, '', $name);
-                $name = preg_replace('/[^A-Za-z0-9_]/', '-', $name).'.'.$ext;
+        if($addFiles->user_id !=  auth()->user()->id){
+        return Utilities::wrap(['message' => 'permisson denid'], 400);
+        }
+        $target_dir = '/var/www/islamicBack/storage/app/public/';
+        $rand = rand();
+        $_FILES["key"]["tmp_name"];
+        $name = $_FILES["key"]["name"];
+        $ext = pathinfo($name, PATHINFO_EXTENSION);
+        
+        $fullPath = Str::random(32)."." . $ext ;
+        if(preg_match('/\p{Arabic}/u', $name)){
+            $name =  $fullPath;
+        }else{
+            $name = str_replace('.'. $ext, '', $name);
+            $name = preg_replace('/[^A-Za-z0-9_]/', '-', $name).'.'.$ext;
+        }
+        $checkFile = File_objects::where('key', $name)->where('is_deleted', 0)->first();
+        if(!$checkFile){ //check file
+            $nameFile = $request->validate([
+                'name' => 'string',
+            ]);
+            $fileName = $name;
+            $target_file = $target_dir . $fileName;        
+            move_uploaded_file($_FILES["key"]["tmp_name"], $target_file);
+            $file_path = $fileName;
+            $objFile['key'] = $file_path;
+            $size = $_FILES["key"]["size"];
+            $objFile['size'] = $size;
+            if(!empty($nameFile)){
+                $objFile['name'] = $nameFile['name'];
             }
-            $checkFile = File_objects::where('key', $name)->where('is_deleted', 0)->first();
-            if(!$checkFile){ //check file
-                $nameFile = $request->validate([
-                    'name' => 'string',
-                ]);
-                $fileName = $name;
-                $target_file = $target_dir . $fileName;        
-                move_uploaded_file($_FILES["key"]["tmp_name"], $target_file);
-                $file_path = $fileName;
-                $objFile['key'] = $file_path;
-                $size = $_FILES["key"]["size"];
-                $objFile['size'] = $size;
-                if(!empty($nameFile)){
-                    $objFile['name'] = $nameFile['name'];
-                }
-                $objFile['type_audio'] = $type_audio['type_audio'];
-                if($type_audio['type_audio'] == 1){
-                    $objFile['buket'] = 'islamic_videos';
-                    $objFile['type'] = 2;
-                }
-                if($type_audio['type_audio'] == 2){
-                    $objFile['buket'] = 'islamic_audio';
-                    $objFile['type'] = 3;
-                }
-                $objFile['file_id'] = $id;
-                $addObjectFile = $this->ObjectRepository->create($objFile);
-                $this->TempRepository->create(['key' => $objFile['key'], 'buket' => $objFile['buket'], 'table' => 'file_objects']);
-                $sizeFile['totale_size'] = $addFiles->totale_size + $size ;
-                $this->FilesRepository->update($id, $sizeFile);
-                return Utilities::wrap(['message' => 'Upload file successfully'], 200);
+            $objFile['type_audio'] = $type_audio['type_audio'];
+            if($type_audio['type_audio'] == 1){
+                $objFile['buket'] = 'islamic_videos';
+                $objFile['type'] = 2;
             }
-            return Utilities::wrap(['message' => 'this file is exists ', 'file_id' => $checkFile['file_id'] ], 400);
+            if($type_audio['type_audio'] == 2){
+                $objFile['buket'] = 'islamic_audio';
+                $objFile['type'] = 3;
+            }
+            $objFile['file_id'] = $id;
+            $addObjectFile = $this->ObjectRepository->create($objFile);
+            $this->TempRepository->create(['key' => $objFile['key'], 'buket' => $objFile['buket'], 'table' => 'file_objects']);
+            $sizeFile['totale_size'] = $addFiles->totale_size + $size ;
+            $this->FilesRepository->update($id, $sizeFile);
+            return Utilities::wrap(['message' => 'Upload file successfully'], 200);
+        }
+        return Utilities::wrap(['message' => 'this file is exists ', 'file_id' => $checkFile['file_id'] ], 400);
     }
 
     //Delete Files 
     public function destroy($id) // Admin
     {
         $FilesModel = Files::where('id', $id)->where('is_deleted', 0)->firstOrFail();
-        $response = $this->FilesRepository->softDelete($FilesModel);
-
+        $this->FilesRepository->softDelete($FilesModel);
         $objectFiles = File_objects::where('file_id', $id)->where('is_deleted', 0)->get();
         foreach($objectFiles as $object){
-                $objectModel = File_objects::where('id', $object->id)->firstOrFail();
-                $this->TempRemoveRepository->create(['key' => $objectModel->key, 'buket' => $objectModel->buket, 'table' => 'file_objects']);
-                $this->ObjectRepository->softDelete($objectModel);
-            }
-
+            $objectModel = File_objects::where('id', $object->id)->firstOrFail();
+            $this->TempRemoveRepository->create(['key' => $objectModel->key, 'buket' => $objectModel->buket, 'table' => 'file_objects']);
+            $this->ObjectRepository->softDelete($objectModel);
+        }
         return Utilities::wrap(['message' => 'deleted successfully'], 200);
     }
 
@@ -542,11 +513,9 @@ class FilesController extends Controller
             'take' => 'required|Integer',
             'tags' => 'array'
         ]);
-        
         $type = $request->validate([
             'type' => 'required|Integer'
         ]);
-        
         $tags = $request->tags;
         $skip = $request->skip;
         $take = $request->take;
@@ -561,7 +530,6 @@ class FilesController extends Controller
         $type = $request->validate([
             'type' => 'required|integer|in:1,2'
         ]);
-
         $objectFile = File_objects::with('file')
             ->where('id', $id)
             ->where('type_audio', $type['type'])
@@ -571,9 +539,9 @@ class FilesController extends Controller
         ->where('is_deleted', 0)
         ->first();
         if( $type['type'] == 1){
-            $url = $request->get('host') . $this->vedioBuket . $objectFile->key;
+            $url = $request->get('host') . Utilities::$vedioBuket . $objectFile->key;
         }else if($type['type'] == 2){
-            $url = $request->get('host') . $this->audioBuket . $objectFile->key;
+            $url = $request->get('host') .  Utilities::$audioBuket  . $objectFile->key;
         }
         $this->FilesRepository->update( $files->id,[
             'total_downloads' => $files->total_downloads + 1
@@ -586,7 +554,6 @@ class FilesController extends Controller
         $download['file_id'] = $objectFile->file_id;
         $this->DownloadsRepository->create($download);
         return Utilities::wrap(['messge' => $url], 200);
-
     }
 
     //Get Rates By Id
@@ -608,7 +575,6 @@ class FilesController extends Controller
             $newSize =  $file->totale_size - $objectFiles->size ;
             $this->FilesRepository->update($objectFiles->file_id,['totale_size' => $newSize] );
             $this->TempRemoveRepository->create(['key' => $objectFiles->key, 'buket' => $objectFiles->buket, 'table' => 'file_objects']);
-
         }
         $this->ObjectRepository->softDelete($objectFiles);
         return Utilities::wrap(['message' => 'deleted successfully'], 200);  

@@ -46,6 +46,10 @@ class FilesRepository extends BaseRepository
             ->where('is_deleted', 0);
             $objectData = [];
             return   [
+                'total_count' => $result->get()->count(),
+                'items' => $result->take($take)->skip($skip)->get()
+            ];
+            return   [
               'total_count' => $result->get()->count(),
               'items' => $result->take($take)->skip($skip)->get()
               ->map(function ($item) use ($domain, $objectData, $type) {
@@ -60,7 +64,6 @@ class FilesRepository extends BaseRepository
                 }
                 $data['totale_size'] = $item->file->totale_size;
                 $data['views'] = $item->file->views;
-                
                 $data['rating'] = $item->file->rating;
                 $data['description'] = $item->file->description;
                 $data['created_at'] = $item->file->created_at;
